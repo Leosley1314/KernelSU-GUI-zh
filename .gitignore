@@ -1,7 +1,5 @@
-# 编译中间产物
-*.pdb
-*.obj
-
-# 本地调试残留
-*.log
-*.tmp
+# 成品与补丁不进仓库，统一放到 Releases
+*.exe
+/ksud-zh-hanization.patch
+*.zip
+/输出/

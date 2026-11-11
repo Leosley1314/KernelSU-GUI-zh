@@ -8,7 +8,7 @@ if (-not (Test-Path -LiteralPath $csc)) {
     throw "找不到 csc.exe，请确认系统已安装 .NET Framework 4.x"
 }
 if (-not (Test-Path -LiteralPath "$dir\ksud_gui.cs")) {
-    throw "缺少 ksud_gui.cs（源码未上传时请先本地放入）"
+    throw "缺少 ksud_gui.cs"
 }
 
 & $csc /nologo /target:winexe /codepage:65001 /optimize+ `

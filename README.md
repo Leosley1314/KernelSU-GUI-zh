@@ -5,6 +5,36 @@ KernelSU `ksud` 命令行工具的 **Windows 图形化前端**，配套一份 **
 
 > 本仓库只做「调用官方 CLI + 汉化文案 + 图形界面」，不修改 KernelSU 的补丁逻辑，也不涉及设备端内核。
 
+## 下载（成品）
+
+成品不打进仓库，全部放在 Releases：
+
+**<https://github.com/Leosley1314/KernelSU-GUI-zh/releases>**
+
+`KernelSU-GUI-zh-v1.0.0.zip`（6.4 MB）内含：
+
+| 文件 | 大小 | 说明 |
+|---|---|---|
+| `ksud-boot-gui.exe` | 49,152 B | GUI 成品，sha256 `BFC6172958ED2EC6452AA8E5D1A084E7603A0638C79B6DFC9E8B4E796E86BB62` |
+| `ksud-x86_64-pc-windows-gnu-zh.exe` | 8,025,180 B | 汉化版 ksud，sha256 `DAB76185A4E9F6D42C058F0C8E99332C3EB97D6AEC93E5FB211778035E3C85F5` |
+| `ksud-zh-hanization.patch` | 109,751 B | 相对 KernelSU v3.3.1 的完整汉化 diff（2,503 行） |
+| `ksud_gui.cs` / `ksud_gui.manifest` / `build.ps1` | | 源码与编译脚本 |
+| `README.md` / `ksud-boot-gui-使用说明.md` / `ksud-汉化说明.md` | | 文档 |
+
+解压后把两个 exe 放同一个目录，双击 `ksud-boot-gui.exe` 即可。
+
+## 仓库内容
+
+| 文件 | 说明 |
+|---|---|
+| `ksud_gui.cs` | GUI 源码（C# WinForms 单文件，76 KB，UTF-8 with BOM） |
+| `ksud_gui.manifest` | DPI 感知 / 系统兼容性清单，编译时必需 |
+| `build.ps1` | 一键编译 GUI（只用系统自带 csc） |
+| `publish.ps1` | 一键把本地源码/文档改动提交并推送到本仓库 |
+| `release.ps1` | 一键打包 zip 并创建/更新 GitHub Release（需要本机已登录） |
+| `ksud-boot-gui-使用说明.md` | 图形界面完整说明 + FAQ + 更新记录 |
+| `ksud-汉化说明.md` | 汉化范围、重建步骤、验证方式 |
+
 ## 功能
 
 - 三个页签，只覆盖官方补丁命令：
@@ -16,27 +46,6 @@ KernelSU `ksud` 命令行工具的 **Windows 图形化前端**，配套一份 **
 - 输出位置自动落到 **`程序所在目录\输出`**（不存在自动创建），文件名按页签规则生成 `<镜像名>-ksu.img` / `<镜像名>-restore.img`。
 - 支持把 boot 镜像直接拖进窗口；实时流式日志、错误按红字区分（ksud 的 stderr 单独着色）、退出码与耗时状态。
 - 配置持久化在 `%APPDATA%\KernelSU-GUI\settings.ini`。
-
-## 文件说明
-
-| 文件 | 大小 | 说明 |
-|---|---|---|
-| `ksud_gui.cs` | 76 KB | GUI 源码（C# WinForms 单文件，UTF-8 with BOM） |
-| `ksud_gui.manifest` | 761 B | DPI 感知 / 系统兼容性清单，编译时必需 |
-| `ksud-boot-gui.exe` | 49 KB | GUI 成品（依赖系统自带 .NET Framework 4.x） |
-| `ksud-x86_64-pc-windows-gnu-zh.exe` | 8.0 MB | 简体中文汉化的 `ksud`（KernelSU v3.3.1 源码重建） |
-| `ksud-zh-hanization.patch` | 107 KB | 汉化补丁（相对 KernelSU v3.3.1 的完整 diff，2,503 行） |
-| `ksud-boot-gui-使用说明.md` | | 图形界面完整说明 + FAQ + 更新记录 |
-| `ksud-汉化说明.md` | | 汉化范围、重建步骤、验证方式 |
-| `build.ps1` | | 一键编译 GUI（只用系统自带 csc） |
-| `publish.ps1` | | 一键把本地改动做成 commit 推到本仓库 |
-
-成品校验值：
-
-| 文件 | SHA-256 |
-|---|---|
-| `ksud-boot-gui.exe` | `BFC6172958ED2EC6452AA8E5D1A084E7603A0638C79B6DFC9E8B4E796E86BB62` |
-| `ksud-x86_64-pc-windows-gnu-zh.exe` | `DAB76185A4E9F6D42C058F0C8E99332C3EB97D6AEC93E5FB211778035E3C85F5` |
 
 ## 编译
 
@@ -64,17 +73,13 @@ C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe /nologo /target:winexe /
 
 程序会按「程序同目录 → 当前目录 → `D:\ksu`」的顺序自动找 `ksud*.exe`，找不到可以点右上角「更换」手动指定。
 
-## 更新仓库
+## 发布新版本
 
-本机改完代码或重新编译后，在项目目录执行：
+1. 改完代码后重新编译：`.\build.ps1`
+2. 同步源码与文档到仓库：`.\publish.ps1`
+3. 打包并发布：`.\release.ps1 -Tag v1.0.1 -Notes "本次改动……"`
 
-```powershell
-.\publish.ps1
-```
-
-脚本会 `git clone` 本仓库到临时目录、拷入全部文件、提交并推送 `main`（首次需要登录 GitHub 一次）。
-
-> 8 MB 的 `ksud-*.exe` 单个文件远低于 GitHub 的 100 MB 限制，直接正常 push 即可，不需要 Git LFS。
+`release.ps1` 会用本机已缓存的 GitHub 凭证调用 REST API 创建 Release 并上传 zip。8 MB 的 exe 远低于 GitHub 单文件 100 MB 限制，不需要 Git LFS。
 
 ## 重要限制：boot 镜像头版本必须 ≥ 3
 
@@ -90,9 +95,9 @@ header 版本可以在镜像偏移 40 处读 4 字节确认；`ANDROID!` 魔数�
 
 - 汉化对象：KernelSU v3.3.1 官方 Release（`x86_64-pc-windows-gnu`）对应的源码。
 - 范围：332 处字面量 + 59 处文档注释，另外 vendor 了 `clap_builder`（`用法:` / `命令:` / `选项:`）与 `anyhow`（`Caused by:` → `由以下原因导致：`）的框架文案；`main.rs` 的错误输出改为 `错误：{e:?}` 并返回退出码 1。
-- 重建步骤见 `ksud-汉化说明.md`，补丁见 `ksud-zh-hanization.patch`。
+- 重建步骤见 `ksud-汉化说明.md`，补丁见 Releases 里的 `ksud-zh-hanization.patch`。
 
 ## 许可
 
-- 汉化版 `ksud` 二进制由 **KernelSU（GPL-3.0）** 源码修改而来，按 GPL-3.0 分发；上游源码：<https://github.com/tiann/KernelSU>（tag `v3.3.1`）。本仓库提供了相对该 tag 的完整补丁，可用于还原对应源码。
+- 汉化版 `ksud` 二进制由 **KernelSU（GPL-3.0）** 源码修改而来，按 GPL-3.0 分发；上游源码：<https://github.com/tiann/KernelSU>（tag `v3.3.1`）。Releases 提供了相对该 tag 的完整补丁，可用于还原对应源码。
 - GUI 源码 `ksud_gui.cs` 与文档为本项目原创，按 MIT 分发。
