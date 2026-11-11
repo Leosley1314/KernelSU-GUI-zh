@@ -5,6 +5,12 @@ KernelSU `ksud` 命令行工具的 **Windows 图形化前端**，配套一份 **
 
 > 本仓库只做「调用官方 CLI + 汉化文案 + 图形界面」，不修改 KernelSU 的补丁逻辑，也不涉及设备端内核。
 
+## 仓库当前内容
+
+已入库：`README.md`、`.gitignore`、`build.ps1`、`publish.ps1`、`ksud_gui.manifest`、`ksud-boot-gui-使用说明.md`、`ksud-汉化说明.md`。
+
+待补齐（需在本机跑一次 `publish.ps1`，见下节）：`ksud_gui.cs`、`ksud-boot-gui.exe`、`ksud-x86_64-pc-windows-gnu-zh.exe`、`ksud-zh-hanization.patch`。这几个是 76 KB 源码、49 KB / 8 MB 二进制和 110 KB 补丁，超过在线接口能直接内联提交的范围。
+
 ## 功能
 
 - 三个页签，只覆盖官方补丁命令：
@@ -19,19 +25,49 @@ KernelSU `ksud` 命令行工具的 **Windows 图形化前端**，配套一份 **
 
 ## 文件说明
 
-| 文件 | 说明 |
-|---|---|
-| `ksud_gui.cs` | GUI 源码（C# WinForms 单文件） |
-| `ksud_gui.manifest` | DPI 感知 / 系统兼容性清单，编译时必需 |
-| `ksud-boot-gui.exe` | GUI 成品（Windows x64，依赖系统自带 .NET Framework 4.x） |
-| `ksud-x86_64-pc-windows-gnu-zh.exe` | 简体中文汉化的 `ksud`（KernelSU v3.3.1 源码重建） |
-| `ksud-zh-hanization.patch` | 汉化补丁（相对 KernelSU v3.3.1 的 diff） |
-| `ksud-boot-gui-使用说明.md` | 图形界面完整说明 + FAQ + 更新记录 |
-| `ksud-汉化说明.md` | 汉化范围、重建步骤、验证方式 |
+| 文件 | 说明 | 是否已入库 |
+|---|---|---|
+| `ksud_gui.cs` | GUI 源码（C# WinForms 单文件，UTF-8 with BOM） | 待补 |
+| `ksud_gui.manifest` | DPI 感知 / 系统兼容性清单，编译时必需 | 已入库 |
+| `ksud-boot-gui.exe` | GUI 成品（49,152 字节，依赖系统自带 .NET Framework 4.x） | 待补 |
+| `ksud-x86_64-pc-windows-gnu-zh.exe` | 简体中文汉化的 `ksud`（8,025,180 字节） | 待补 |
+| `ksud-zh-hanization.patch` | 汉化补丁（相对 KernelSU v3.3.1 的完整 diff，2,503 行） | 待补 |
+| `ksud-boot-gui-使用说明.md` | 图形界面完整说明 + FAQ + 更新记录 | 已入库 |
+| `ksud-汉化说明.md` | 汉化范围、重建步骤、验证方式 | 已入库 |
+| `build.ps1` | 一键编译 GUI（只用系统自带 csc） | 已入库 |
+| `publish.ps1` | 一键把待补文件做成 commit 推到本仓库 | 已入库 |
+
+## 补齐待入库文件
+
+1. 装一次 Git：<https://git-scm.com/download/win>（只需装一次，首次 push 会弹浏览器登录 GitHub）。
+2. 把 4 个待补文件（`ksud_gui.cs`、`ksud-boot-gui.exe`、`ksud-x86_64-pc-windows-gnu-zh.exe`、`ksud-zh-hanization.patch`）放到本 README 同一目录。
+3. 在该目录执行：
+
+```powershell
+.\publish.ps1
+```
+
+脚本会自动 `git clone` 本仓库到临时目录、拷入上表全部文件、提交并推送 `main`，结束会打印仓库地址。
+
+也可以完全手动：
+
+```powershell
+git clone https://github.com/Leosley1314/KernelSU-GUI-zh.git
+git clone 后拷入文件，然后：
+git add -A && git commit -m "同步源码、成品与文档" && git push origin main
+```
+
+> 8 MB 的 `ksud-*.exe` 单个文件远低于 GitHub 的 100 MB 限制，直接正常 push 即可，不需要 Git LFS。
 
 ## 编译
 
 无需安装 Visual Studio 或 .NET SDK，只用系统自带编译器：
+
+```powershell
+.\build.ps1
+```
+
+等价于：
 
 ```powershell
 C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe /nologo /target:winexe /codepage:65001 /optimize+ `
