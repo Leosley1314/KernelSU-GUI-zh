@@ -363,11 +363,12 @@ namespace KsudGui
         public string Mode = "v1";
         public string KsudPath = "";
         Dictionary<string, Control> fields = new Dictionary<string, Control>();
+        Dictionary<string, Field> fieldDefs = new Dictionary<string, Field>();   // 当前页签的字段定义（key → Field）
         Dictionary<string, bool> checks = new Dictionary<string, bool>();
         Dictionary<string, string> texts = new Dictionary<string, string>();
         List<string> kmis = new List<string>();
 
-        Panel leftScroll, leftInner, cardHolder;
+        Panel leftScroll, leftInner;
         RichTextBox rtb;
         TabsControl tabs;
         FlatButton btnStart, btnStop;
@@ -435,17 +436,24 @@ namespace KsudGui
             MinimumSize = new Size((int)(900 * k), (int)(600 * k));
             ResumeLayout(true);
             ClientSize = new Size((int)(980 * k), (int)(664 * k));
-            // 左列面板与卡片等宽，避免卡片右边缘被纵向滚动条压住
-            leftInner.Width = (int)(438 * k);
+            FitCards();          // 左列卡片与输入框重新对齐到滚动面板宽度
+        }
+
+        // 把左列的卡片、卡片里的多行输入框按当前 K 重新对齐
+        // ApplyDpiScale（改缩放）与 ScaleCards（切页重建后放大）共用这一处，避免两边改不一样
+        void FitCards()
+        {
+            leftInner.Width = (int)(438 * K);
             foreach (Control c in leftInner.Controls)
             {
                 if (!(c is Card)) continue;
+                c.Left = 0;
                 c.Width = leftInner.Width;
                 foreach (Control cc in c.Controls)
                     if (cc is InputBox)
                     {
-                        cc.Width = c.Width - (int)(32 * k);
-                        cc.Left = (int)(16 * k);
+                        cc.Width = c.Width - (int)(32 * K);
+                        cc.Left = (int)(16 * K);
                         ((InputBox)cc).Relayout();
                     }
             }
@@ -662,7 +670,7 @@ namespace KsudGui
                 }
                 Mode = TabModes[tabs.SelectedIndex];
                 RebuildForm();
-                AutoFillCurrent();          // 换页后输出文件名要按当前页规则重算（-ksu / -restore）
+                AutoFillOutput(Val("boot"));   // 换页后输出文件名要按当前页规则重算（-ksu / -restore）
                 SaveSettings();
             };
             tabHost.Controls.Add(tabs);
@@ -853,9 +861,12 @@ namespace KsudGui
         void RebuildForm()
         {
             fields.Clear();
+            fieldDefs.Clear();
             leftInner.Controls.Clear();
             try { using (var gg = Graphics.FromHwnd(IntPtr.Zero)) Ak = Math.Max(1f, gg.DpiX / 96f); } catch { Ak = 1f; }
             var sections = SectionsFor(Mode);
+            foreach (var sec in sections)
+                foreach (var f in sec.Fields) fieldDefs[f.Key] = f;
             int y = 0;
             int width = 438;
             foreach (var sec in sections)
@@ -929,35 +940,15 @@ namespace KsudGui
                 return;
             }
             SuspendLayout();
-            leftInner.Width = (int)(438 * K);
             int maxBottom = 0;
             foreach (Control c in leftInner.Controls)
             {
                 c.Scale(new SizeF(K, K));
-                if (c is Card)
-                {
-                    c.Left = 0;
-                    c.Width = leftInner.Width;
-                    foreach (Control cc in c.Controls)
-                        if (cc is InputBox)
-                        {
-                            cc.Width = c.Width - (int)(32 * K);
-                            cc.Left = (int)(16 * K);
-                            ((InputBox)cc).Relayout();
-                        }
-                }
                 maxBottom = Math.Max(maxBottom, c.Bottom);
             }
+            FitCards();
             leftInner.Height = maxBottom + (int)(10 * K);
             ResumeLayout(true);
-        }
-
-        static int MeasureText(string text, Font font, int width)
-        {
-            if (width <= 10) return 16;
-            int h = TextRenderer.MeasureText(text, font, new Size(width, 1000),
-                                             TextFormatFlags.WordBreak).Height;
-            return h;
         }
 
         int RenderField(Card card, Field f, int pad, int y, int w)
@@ -1151,15 +1142,27 @@ namespace KsudGui
             AutoFillOutput(boot);
         }
 
-        void AutoFillCurrent()
-        {
-            AutoFillOutput(Val("boot"));
-        }
-
         // 输出位置统一放在**程序所在目录\输出**，与 boot 镜像在哪无关
         static string OutputRoot()
         {
             return Path.Combine(Path.GetDirectoryName(Application.ExecutablePath), "输出");
+        }
+
+        // 目录不存在就建出来；出错时记一条警告并返回 false，调用方直接放弃后续动作
+        bool EnsureDir(string dir)
+        {
+            if (string.IsNullOrEmpty(dir)) return false;
+            if (Directory.Exists(dir)) return true;
+            try
+            {
+                Directory.CreateDirectory(dir);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Log("创建输出目录失败：" + ex.Message, LogKind.Warn);
+                return false;
+            }
         }
 
         // 选了 boot 镜像 / 切页 / 启动时：把输出位置补到「程序目录\输出」，没有就建一个。
@@ -1167,11 +1170,7 @@ namespace KsudGui
         void AutoFillOutput(string bootPath)
         {
             string dir = OutputRoot();
-            if (!Directory.Exists(dir))
-            {
-                try { Directory.CreateDirectory(dir); }
-                catch (Exception ex) { Log("创建输出目录失败：" + ex.Message, LogKind.Warn); return; }
-            }
+            if (!EnsureDir(dir)) return;
             string baseName = string.IsNullOrEmpty(bootPath) ? "boot"
                             : Path.GetFileNameWithoutExtension(bootPath.Trim().Trim('"'));
             if (string.IsNullOrEmpty(baseName)) baseName = "boot";
@@ -1187,18 +1186,8 @@ namespace KsudGui
         // 输出目录若不存在就创建出来
         void EnsureOutDir()
         {
-            string dir = lastOutDir;
-            if (string.IsNullOrEmpty(dir)) return;
-            if (Directory.Exists(dir)) return;
-            try
-            {
-                Directory.CreateDirectory(dir);
-                Log("输出目录不存在，已自动创建：" + dir, LogKind.Dim);
-            }
-            catch (Exception ex)
-            {
-                Log("创建输出目录失败：" + ex.Message, LogKind.Warn);
-            }
+            if (string.IsNullOrEmpty(lastOutDir) || Directory.Exists(lastOutDir)) return;
+            if (EnsureDir(lastOutDir)) Log("输出目录不存在，已自动创建：" + lastOutDir, LogKind.Dim);
         }
 
         // 记下“哪些输出值是程序自己写的”，下次可安全覆盖；用户手改过的就保留
@@ -1254,7 +1243,8 @@ namespace KsudGui
                 return;
             }
             ((InputBox)fields["boot"]).Box.Text = file;
-            string name = FindField("boot") != null ? FindField("boot").Label : "boot 镜像";
+            Field bf = FindField("boot");
+            string name = bf != null ? bf.Label : "boot 镜像";
             AutoFillOutput(file);
             Log("已把拖入的文件填入“" + name + "”：" + file, LogKind.Dim);
         }
@@ -1340,12 +1330,10 @@ namespace KsudGui
         }
 
         // ------------------------------------------------------------ 运行
+        // 字段定义表在 RebuildForm 里算一次，避免每次查找都重新 SectionsFor(Mode)
         Field FindField(string key)
         {
-            foreach (var sec in SectionsFor(Mode))
-                foreach (var f in sec.Fields)
-                    if (f.Key == key) return f;
-            return null;
+            return fieldDefs.ContainsKey(key) ? fieldDefs[key] : null;
         }
 
         string Val(string key)
@@ -1620,7 +1608,7 @@ namespace KsudGui
         // ------------------------------------------------------------ 表单规格
         class Field
         {
-            public string Key, Label, Hint, Kind, Flag;
+            public string Key, Label, Hint, Kind;
             public bool Required;
             public string[] Values = new string[0];
         }
