@@ -11,11 +11,11 @@ KernelSU `KSU` 命令行工具的 **Windows 图形化前端**，配套一份 **�
 
 **<https://github.com/Leosley1314/KernelSU-GUI-zh/releases>**
 
-`KernelSU-GUI-zh-v1.0.0.zip`（6.4 MB）内含：
+`KernelSU-GUI-zh-v1.0.1.zip`（6.4 MB）内含：
 
 | 文件 | 大小 | 说明 |
 |---|---|---|
-| `KSU-boot-gui.exe` | 49,152 B | GUI 成品，sha256 `BFC6172958ED2EC6452AA8E5D1A084E7603A0638C79B6DFC9E8B4E796E86BB62` |
+| `KSU-boot-gui.exe` | 49,152 B | GUI 成品，sha256 `303DB3E1B04088AF5567D2A51EED916BD9B934FEF65CDF060EF12063E3810896` |
 | `KSU-x86_64-pc-windows-gnu-zh.exe` | 8,025,180 B | 汉化版 KSU，sha256 `DAB76185A4E9F6D42C058F0C8E99332C3EB97D6AEC93E5FB211778035E3C85F5` |
 | `KSU-zh-hanization.patch` | 109,751 B | 相对 KernelSU v3.3.1 的完整汉化 diff（2,503 行） |
 | `KSU_gui.cs` / `KSU_gui.manifest` / `build.ps1` | | 源码与编译脚本 |
