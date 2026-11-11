@@ -23,8 +23,8 @@ if (-not $git) { throw "未找到 git，请先安装 Git for Windows：https://g
 
 $files = @(
     "README.md", ".gitignore", "build.ps1", "publish.ps1", "release.ps1",
-    "ksud_gui.cs", "ksud_gui.manifest",
-    "ksud-boot-gui-使用说明.md", "ksud-汉化说明.md"
+    "KSU_gui.cs", "KSU_gui.manifest",
+    "KSU-boot-gui-使用说明.md", "KSU-汉化说明.md"
 )
 
 $tmp = Join-Path $env:TEMP ("kernelsu-gui-zh-" + [Guid]::NewGuid().ToString("N").Substring(0, 8))

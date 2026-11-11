@@ -3,7 +3,7 @@
   前置：本机已安装 Git，且已登录过一次 GitHub（凭据由 Git Credential Manager 缓存）。
   用法：
     .\release.ps1 -Tag v1.0.1 -Notes "修了某某问题"
-  说明：先把 ksud-boot-gui.exe 编译好（.\build.ps1），本脚本只负责打包 + 上传。
+  说明：先把 KSU-boot-gui.exe 编译好（.\build.ps1），本脚本只负责打包 + 上传。
 #>
 param(
     [Parameter(Mandatory = $true)][string]$Tag,
@@ -44,9 +44,9 @@ $stage = Join-Path $env:TEMP ("ksgz-pkg-" + [Guid]::NewGuid().ToString("N").Subs
 New-Item -ItemType Directory -Force -Path $stage | Out-Null
 
 $files = @(
-    "ksud-boot-gui.exe", "ksud-x86_64-pc-windows-gnu-zh.exe", "ksud-zh-hanization.patch",
-    "ksud_gui.cs", "ksud_gui.manifest", "build.ps1",
-    "README.md", "ksud-boot-gui-使用说明.md", "ksud-汉化说明.md"
+    "KSU-boot-gui.exe", "KSU-x86_64-pc-windows-gnu-zh.exe", "KSU-zh-hanization.patch",
+    "KSU_gui.cs", "KSU_gui.manifest", "build.ps1",
+    "README.md", "KSU-boot-gui-使用说明.md", "KSU-汉化说明.md"
 )
 foreach ($f in $files) {
     $p = Join-Path $src $f

@@ -1,5 +1,5 @@
 # 成品与补丁不进仓库，统一放到 Releases
 *.exe
-/ksud-zh-hanization.patch
+/KSU-zh-hanization.patch
 *.zip
 /输出/

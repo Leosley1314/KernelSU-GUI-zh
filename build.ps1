@@ -7,15 +7,15 @@ $csc = "C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe"
 if (-not (Test-Path -LiteralPath $csc)) {
     throw "找不到 csc.exe，请确认系统已安装 .NET Framework 4.x"
 }
-if (-not (Test-Path -LiteralPath "$dir\ksud_gui.cs")) {
-    throw "缺少 ksud_gui.cs"
+if (-not (Test-Path -LiteralPath "$dir\KSU_gui.cs")) {
+    throw "缺少 KSU_gui.cs"
 }
 
 & $csc /nologo /target:winexe /codepage:65001 /optimize+ `
-    /win32manifest:"$dir\ksud_gui.manifest" /out:"$dir\ksud-boot-gui.exe" `
-    /r:System.Windows.Forms.dll /r:System.Drawing.dll "$dir\ksud_gui.cs"
+    /win32manifest:"$dir\KSU_gui.manifest" /out:"$dir\KSU-boot-gui.exe" `
+    /r:System.Windows.Forms.dll /r:System.Drawing.dll "$dir\KSU_gui.cs"
 
 if ($LASTEXITCODE -ne 0) {
     throw "编译失败，退出码 $LASTEXITCODE"
 }
-Write-Host "已生成 $dir\ksud-boot-gui.exe"
+Write-Host "已生成 $dir\KSU-boot-gui.exe"

@@ -1,6 +1,6 @@
-﻿// ksud_gui.cs — KernelSU boot 修补工具（ksud 中文版的图形前端）
-// 编译：csc /target:winexe /codepage:65001 /win32manifest:ksud_gui.manifest
-//        /out:ksud-boot-gui.exe /r:System.Windows.Forms.dll /r:System.Drawing.dll ksud_gui.cs
+﻿// KSU_gui.cs — KernelSU boot 修补工具（KSU 中文版的图形前端）
+// 编译：csc /target:winexe /codepage:65001 /win32manifest:KSU_gui.manifest
+//        /out:KSU-boot-gui.exe /r:System.Windows.Forms.dll /r:System.Drawing.dll KSU_gui.cs
 
 using System;
 using System.Collections.Generic;
@@ -372,7 +372,7 @@ namespace KsudGui
         TabsControl tabs;
         FlatButton btnStart, btnStop;
         ProgressBar progress;
-        Label statusLabel, dotLabel, ksudLabel;
+        Label statusLabel, dotLabel, KSULabel;
         float K = 1f;                       // DPI 缩放系数，供 Resize 里计算边距
         Queue<object[]> logQueue = new Queue<object[]>();
         System.Windows.Forms.Timer pump, spinner;
@@ -411,12 +411,12 @@ namespace KsudGui
             BuildUi();
             RebuildForm();
             LoadSettings();
-            RefreshKsudLabel();      // 启动时把 ksud 路径显示出来
+            RefreshKsudLabel();      // 启动时把 KSU 路径显示出来
             SyncTabs();              // 配置里恢复的模式要和页签高亮对上
 
             ApplyDpiScale();
             Log("欢迎使用 KernelSU boot 修补工具。", LogKind.Dim);
-            Log("调用的 ksud：" + (KsudPath == "" ? "未找到，请点右上角“更换”" : KsudPath), LogKind.Dim);
+            Log("调用的 KSU：" + (KsudPath == "" ? "未找到，请点右上角“更换”" : KsudPath), LogKind.Dim);
             if (kmis.Count > 0) Log("内置 " + kmis.Count + " 个 KMI 模块，可在“KMI 版本”里手动指定。", LogKind.Dim);
             AutoFillFromSaved();     // 启动时把输出位置补到程序目录\输出
             Log("", LogKind.Dim);
@@ -453,7 +453,9 @@ namespace KsudGui
         // ------------------------------------------------------------ 配置
         string ResolveKsud()
         {
-            string[] names = { "ksud-x86_64-pc-windows-gnu-zh.exe", "ksud.exe", "ksud-x86_64-pc-windows-gnu.exe" };
+            // 先找改名后的中文版，再兼容旧的 ksud 命名与上游官方文件名
+            string[] names = { "KSU-x86_64-pc-windows-gnu-zh.exe", "ksud-x86_64-pc-windows-gnu-zh.exe",
+                               "ksud.exe", "ksud-x86_64-pc-windows-gnu.exe" };
             List<string> bases = new List<string>();
             bases.Add(Path.GetDirectoryName(Application.ExecutablePath));
             bases.Add(Directory.GetCurrentDirectory());
@@ -468,7 +470,8 @@ namespace KsudGui
                 }
                 try
                 {
-                    string[] found = Directory.GetFiles(b, "ksud*.exe");
+                    string[] found = Directory.GetFiles(b, "KSU*.exe");
+                    if (found.Length == 0) found = Directory.GetFiles(b, "ksud*.exe");   // 兼容改名前的文件
                     if (found.Length > 0) return found[0];
                 }
                 catch { }
@@ -512,7 +515,7 @@ namespace KsudGui
                     int eq = line.IndexOf('=');
                     if (eq <= 0) continue;
                     string k = line.Substring(0, eq), v = line.Substring(eq + 1);
-                    if (k == "ksud" && File.Exists(v))
+                    if (k == "KSU" && File.Exists(v))
                     {
                         KsudPath = v;
                         kmis = QueryKmis();
@@ -562,7 +565,7 @@ namespace KsudGui
             {
                 Directory.CreateDirectory(Path.GetDirectoryName(cfgPath));
                 var sb = new StringBuilder();
-                sb.AppendLine("ksud=" + KsudPath);
+                sb.AppendLine("KSU=" + KsudPath);
                 sb.AppendLine("mode=" + Mode);
                 foreach (var kv in texts) sb.AppendLine("t." + kv.Key + "=" + kv.Value);
                 foreach (var kv in checks) sb.AppendLine("c." + kv.Key + "=" + (kv.Value ? "1" : "0"));
@@ -596,7 +599,7 @@ namespace KsudGui
             };
             var sub = new Label
             {
-                Text = "ksud 3.3.1 · 中文本地化图形前端 · 内核模块与 ksuinit 均为官方内置资产",
+                Text = "KSU 3.3.1 · 中文本地化图形前端 · 内核模块与 ksuinit 均为官方内置资产",
                 Font = T.F(8.5f, FontStyle.Regular),
                 ForeColor = T.Muted,
                 AutoSize = true,
@@ -606,16 +609,16 @@ namespace KsudGui
             header.Controls.Add(title);
             header.Controls.Add(sub);
 
-            var ksudCap = new Label
+            var KSUCap = new Label
             {
-                Text = "ksud 位置",
+                Text = "KSU 位置",
                 Font = T.F(8f, FontStyle.Regular),
                 ForeColor = T.Faint,
                 AutoSize = true,
                 BackColor = T.Bg,
                 Anchor = AnchorStyles.Top | AnchorStyles.Right
             };
-            ksudLabel = new Label
+            KSULabel = new Label
             {
                 Text = "",
                 Font = new Font(T.Mono, 7.5f, FontStyle.Regular, GraphicsUnit.Point),
@@ -632,16 +635,16 @@ namespace KsudGui
                 Size = new Size(64, 26)
             };
             btnKsud.Click += delegate { ChooseKsud(); };
-            header.Controls.Add(ksudCap);
-            header.Controls.Add(ksudLabel);
+            header.Controls.Add(KSUCap);
+            header.Controls.Add(KSULabel);
             header.Controls.Add(btnKsud);
             header.Resize += delegate
             {
                 btnKsud.Location = new Point(header.Width - (int)(24 * K) - btnKsud.Width, (int)(20 * K));
-                ksudLabel.Width = (int)(320 * K);
-                ksudLabel.Location = new Point(btnKsud.Left - (int)(10 * K) - ksudLabel.Width, (int)(24 * K));
-                ksudLabel.Height = (int)(18 * K);
-                ksudCap.Location = new Point(ksudLabel.Left + ksudLabel.Width - ksudCap.Width, (int)(5 * K));
+                KSULabel.Width = (int)(320 * K);
+                KSULabel.Location = new Point(btnKsud.Left - (int)(10 * K) - KSULabel.Width, (int)(24 * K));
+                KSULabel.Height = (int)(18 * K);
+                KSUCap.Location = new Point(KSULabel.Left + KSULabel.Width - KSUCap.Width, (int)(5 * K));
             };
             Controls.Add(header);
 
@@ -833,9 +836,9 @@ namespace KsudGui
         ToolTip ttKsud;
         void RefreshKsudLabel()
         {
-            ksudLabel.Text = KsudPath == "" ? "未找到 ksud，请点“更换”" : Path.GetFileName(KsudPath);
+            KSULabel.Text = KsudPath == "" ? "未找到 KSU，请点“更换”" : Path.GetFileName(KsudPath);
             if (ttKsud == null) ttKsud = new ToolTip();
-            ttKsud.SetToolTip(ksudLabel, KsudPath == "" ? "当前没有可用的 ksud" : KsudPath);   // 悬停看完整路径
+            ttKsud.SetToolTip(KSULabel, KsudPath == "" ? "当前没有可用的 KSU" : KsudPath);   // 悬停看完整路径
         }
 
         // ------------------------------------------------------------ 表单构建
@@ -1224,7 +1227,7 @@ namespace KsudGui
                     kmis = QueryKmis();
                     RefreshKsudLabel();
                     RebuildForm();
-                    Log("已切换 ksud：" + KsudPath, LogKind.Dim);
+                    Log("已切换 KSU：" + KsudPath, LogKind.Dim);
                     SaveSettings();
                 }
             }
@@ -1390,7 +1393,7 @@ namespace KsudGui
         string[] BuildArgs()
         {
             if (KsudPath == "" || !File.Exists(KsudPath))
-                throw new Exception("没有找到 ksud 程序，请点右上角“更换”选择 ksud 中文版 exe。");
+                throw new Exception("没有找到 KSU 程序，请点右上角“更换”选择 KSU 中文版 exe。");
 
             var a = new List<string>();
             string boot = Val("boot");
@@ -1571,7 +1574,7 @@ namespace KsudGui
             }
             else
             {
-                Log("✖ ksud 返回退出码 " + code + "，用时 " + secs.ToString("0.0") + " 秒。", LogKind.Err);
+                Log("✖ KSU 返回退出码 " + code + "，用时 " + secs.ToString("0.0") + " 秒。", LogKind.Err);
                 SetStatus("失败 · 退出码 " + code, T.Danger);
             }
             Log(new string('─', 44), LogKind.Dim);
@@ -1642,7 +1645,7 @@ namespace KsudGui
                 var s1 = new Section
                 {
                     Title = "输入文件",
-                    Desc = "选择要修补的镜像；内核、模块、init 留空则使用 ksud 内置资产。"
+                    Desc = "选择要修补的镜像；内核、模块、init 留空则使用 KSU 内置资产。"
                 };
                 s1.Fields.Add(Fd("boot", "boot 镜像", "file", "一般是从手机上备份出来的 boot.img 或 init_boot.img", true));
                 s1.Fields.Add(Fd("kernel", "内核镜像（可选）", "file", "想替换的内核 Image，留空则保留原内核", false));
@@ -1650,12 +1653,12 @@ namespace KsudGui
                 s1.Fields.Add(Fd("init", "init 文件（可选）", "file", "替换 ramdisk 中的 init，留空使用内置 ksuinit", false));
                 list.Add(s1);
 
-                var s2 = new Section { Title = "输出", Desc = "默认输出到本程序所在目录下的“输出”文件夹；文件名留空时使用 ksud 的默认规则。" };
+                var s2 = new Section { Title = "输出", Desc = "默认输出到本程序所在目录下的“输出”文件夹；文件名留空时使用 KSU 的默认规则。" };
                 s2.Fields.Add(Fd("out", "输出目录（可选）", "dir", "留空则输出到程序目录\\输出", false));
                 s2.Fields.Add(Fd("out_name", "输出文件名（可选）", "text", "例如 boot-ksu.img", false));
                 list.Add(s2);
 
-                var s3 = new Section { Title = "选项", Desc = "勾选即生效，对应 ksud boot-patch 的同名开关。" };
+                var s3 = new Section { Title = "选项", Desc = "勾选即生效，对应 KSU boot-patch 的同名开关。" };
                 var kmi = Fd("kmi", "KMI 版本", "combo", "指定后强制使用该 KMI 的内置模块；留空自动识别", false);
                 s3.Fields.Add(kmi);
                 var arch = Fd("arch", "架构", "combo", "", false);
@@ -1757,7 +1760,7 @@ namespace KsudGui
             {
                 try
                 {
-                    string log = Path.Combine(Path.GetTempPath(), "ksud-gui-crash.log");
+                    string log = Path.Combine(Path.GetTempPath(), "KSU-gui-crash.log");
                     File.WriteAllText(log, DateTime.Now.ToString() + "\r\n" + ex.ToString(), new UTF8Encoding(false));
                 }
                 catch { }
